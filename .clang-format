@@ -1,0 +1,7 @@
+{
+  PointerAlignment: Right,
+  ColumnLimit: 0,
+  AllowShortIfStatementsOnASingleLine: true,
+  IndentWidth: 4,
+  BreakBeforeBraces: Allman,
+}
