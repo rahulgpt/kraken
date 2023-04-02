@@ -28,5 +28,6 @@ typedef struct HTTPReq
 } http_req_t;
 
 http_req_t *http_req_init(char *req_string);
+void http_req_free(http_req_t *http_req);
 
 #endif /* http_req_h */

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static enum HTTPMethod get_method(char *method)
+static enum HTTPMethod select_method(char *method)
 {
     if (strcmp(method, "GET") == 0) return GET;
     if (strcmp(method, "POST") == 0) return POST;
@@ -33,20 +33,28 @@ static uint64_t header_hash(const void *item, uint64_t seed0, uint64_t seed1)
     return owl_hashmap_sip(header->name, strlen(header->name), seed0, seed1);
 }
 
+bool header_iter(const void *item, void *udata)
+{
+    const header_t *header = item;
+    printf("name: %s, value: %s\n", header->name, header->value);
+    return true;
+}
+
 static owl_hashmap_t *parse_http_headers(char *header_fields)
 {
     owl_hashmap_t *header_map = owl_hashmap_new(sizeof(header_t), sizeof(header_t), 0, 0,
                                                 header_hash, header_compare, NULL, NULL);
 
-    char *header = strtok(header_fields, "\n");
+    char *header_pos = NULL;
+    char *header = strtok_r(header_fields, "\n", &header_pos);
     while (header != NULL)
     {
         char *name = strtok(header, ":");
         char *value = strtok(NULL, "\n");
-        value++; // remove leading space
+        if (value != NULL) value++; // remove leading space
 
         owl_hashmap_set(header_map, &(header_t){.name = name, .value = value});
-        header = strtok(NULL, "\n");
+        header = strtok_r(NULL, "\n", &header_pos);
     }
 
     return header_map;
@@ -78,10 +86,18 @@ http_req_t *http_req_init(char *req_string)
     http_version = strtok(http_version, "/");
     http_version = strtok(NULL, "/");
 
-    req->method = get_method(method);
+    req->method = select_method(method);
     req->uri = uri;
     req->http_version = (float)atof(http_version);
     req->headers = parse_http_headers(header_fields);
 
+    owl_hashmap_scan(req->headers, header_iter, NULL);
+
     return req;
+}
+
+void http_req_free(http_req_t *http_req)
+{
+    owl_hashmap_free(http_req->headers);
+    free(http_req);
 }
