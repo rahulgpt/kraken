@@ -2,7 +2,7 @@ CC = clang
 CFLAGS = -Wall
 OBJDIR = out
 LIBDIR = lib
-LIBNAME = libhyper
+LIBNAME = libkraken
 LIBTYPE = static
 
 SRCS = $(wildcard *.c */*.c)
