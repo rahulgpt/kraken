@@ -19,6 +19,10 @@
 #define THREADS 20
 
 #define MAX_LINE 4096
+#define MAX_RESPONSE_SIZE 2e+6 // 2 MB
+#define CHUNK_SIZE 1e+6        // 1 MB
+
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
 static void handle_clients(http_server_t *server);
 char *bin2hex(const unsigned char *input, size_t len);
@@ -94,6 +98,7 @@ static void handle_clients(http_server_t *http_server)
 
 static char *handle_404()
 {
+    return "";
 }
 
 // thread function
@@ -136,26 +141,41 @@ void *client_handler(void *arg)
     if (route)
     {
         char *response = route->handler(http_req);
-        snprintf((char *)buff, sizeof(buff), "%s", response);
+        size_t response_len = strlen(response);
+
+        // handle if the response size is too large
+        if (response_len > MAX_RESPONSE_SIZE)
+        {
+            owl_println("[🐙] Response too large, sending in chunks...");
+
+            size_t offset = 0;
+            while (offset < response_len)
+            {
+                size_t chunk_size = MIN(CHUNK_SIZE, response_len - offset);
+
+                if (send(client_server->conn_fd, response + offset, chunk_size, 0) < 0)
+                    err_n_die("Error while sending");
+
+                offset += chunk_size;
+            }
+        }
+        else
+        {
+            snprintf((char *)buff, sizeof(buff), "%s", response);
+            if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
+                err_n_die("Error while sending");
+        }
     }
     else
+    {
         snprintf((char *)buff, sizeof(buff), "%s", hello);
-
-    // owl_println("res: %s", route->handler(http_req));
-
-    // write(conn_fd, hello, strlen(hello));
-    int send_result = send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0);
-
-    if (send_result < 0)
-        err_n_die("Error while sending");
-    else if (send_result == 0)
-        owl_println("Connection closed by client");
+        if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
+            err_n_die("Error while sending");
+    }
 
     close(client_server->conn_fd);
     http_req_free(http_req);
     free(client_server);
-
-    owl_println("[🐙] Connection closed");
 
     return NULL;
 }
