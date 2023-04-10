@@ -5,18 +5,14 @@
 #include "http_req.h"
 #include "server.h"
 
-typedef struct
+typedef struct http_server
 {
     server_t *server;
     owl_hashmap_t *routes;
 } http_server_t;
 
 http_server_t *http_server_init(int port, int backlog);
-int register_route(server_t *server,
-                   char *(*route_function)(http_server_t *server,
-                                           http_req_t *request,
-                                           char *uri,
-                                           int num_methods, ...));
+int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req));
 
 /*
  * Start listening for incoming connections
