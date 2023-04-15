@@ -3,16 +3,18 @@
 
 #include "../external/include/owl/collections/hashmap.h"
 #include "http_req.h"
+#include "http_res.h"
 #include "server.h"
 
 typedef struct http_server
 {
     server_t *server;
     owl_hashmap_t *routes;
+    owl_hashmap_t *http_status_map;
 } http_server_t;
 
 http_server_t *http_server_init(int port, int backlog);
-int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req));
+int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req, http_res_t *res));
 
 /*
  * Start listening for incoming connections

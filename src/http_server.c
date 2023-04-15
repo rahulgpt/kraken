@@ -3,6 +3,7 @@
 #include "../external/include/owl/systems/thread_pool.h"
 #include "../external/include/owl/utils/log.h"
 #include "http_req.h"
+#include "http_status.h"
 #include "server.h"
 #include <errno.h>
 #include <netdb.h>
@@ -19,10 +20,7 @@
 #define THREADS 20
 
 #define MAX_LINE 4096
-#define MAX_RESPONSE_SIZE 2e+6 // 2 MB
-#define CHUNK_SIZE 1e+6        // 1 MB
-
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX_HEADER_LEN 1024
 
 static void handle_clients(http_server_t *server);
 char *bin2hex(const unsigned char *input, size_t len);
@@ -31,7 +29,7 @@ void err_n_die(char *fmt, ...);
 typedef struct
 {
     char *uri;
-    char *(*handler)(http_req_t *req);
+    char *(*handler)(http_req_t *req, http_res_t *res);
 } http_route_t;
 
 static int route_compare(const void *a, const void *b, void *udata)
@@ -57,6 +55,8 @@ http_server_t *http_server_init(int port, int backlog)
                                       port, backlog);
     http_server->routes = owl_hashmap_new(sizeof(http_route_t), sizeof(http_route_t), 0, 0,
                                           route_hash, route_compare, NULL, NULL);
+
+    http_server->http_status_map = http_status_map_init();
 
     return http_server;
 }
@@ -96,11 +96,6 @@ static void handle_clients(http_server_t *http_server)
     owl_thread_pool_free(tp);
 }
 
-static char *handle_404()
-{
-    return "";
-}
-
 // thread function
 void *client_handler(void *arg)
 {
@@ -108,7 +103,6 @@ void *client_handler(void *arg)
     uint8_t recv_line[MAX_LINE + 1];
     uint8_t buff[MAX_LINE + 1];
     uint8_t req_string[3000];
-    char *hello = "HTTP/1.1 200 OK\r\n\r\n<html><head><title>Kraken Server</title></head><body><h2 style=\"color:lightcoral;\">404 Not found!!</h2></body><html>";
     int n;
     size_t req_len = 0;
 
@@ -133,47 +127,68 @@ void *client_handler(void *arg)
         err_n_die("read error");
 
     // get the http headers
+    printf("Req str: %s", req_string);
     http_req_t *http_req = http_req_init((char *)req_string);
     owl_hashmap_t *routes_map = client_server->server->routes;
+    owl_hashmap_t *http_status_map = client_server->server->http_status_map;
+
+    http_res_t *http_res = http_res_init();
+    status_code_with_reason_t *scr = owl_hashmap_get(http_status_map,
+                                                     &(status_code_with_reason_t){.code = http_res->status_code});
+
+    if (scr) http_res->reason = scr->reason;
 
     http_route_t *route = owl_hashmap_get(routes_map, &(http_route_t){.uri = http_req->uri});
 
+    // Date header indicates the data and time the response was generated
+    char date_str[100];
+    time_t now = time(NULL);
+    struct tm tm = *gmtime(&now);
+    strftime(date_str, sizeof(date_str), "%a, %d %b %Y %H:%M:%S GMT", &tm);
+
     if (route)
     {
-        char *response = route->handler(http_req);
-        size_t response_len = strlen(response);
+        // After calling the handler, "http_res" will be populated
+        char *res = route->handler(http_req, http_res);
+        size_t res_len = strlen(res);
 
-        // handle if the response size is too large
-        if (response_len > MAX_RESPONSE_SIZE)
+        char headers[MAX_HEADER_LEN] = "";
+        size_t headers_len = 0;
+        void *item;
+        size_t iter = 0;
+        while (owl_hashmap_iter(http_res->headers, &iter, &item))
         {
-            owl_println("[🐙] Response too large, sending in chunks...");
-
-            size_t offset = 0;
-            while (offset < response_len)
-            {
-                size_t chunk_size = MIN(CHUNK_SIZE, response_len - offset);
-
-                if (send(client_server->conn_fd, response + offset, chunk_size, 0) < 0)
-                    err_n_die("Error while sending");
-
-                offset += chunk_size;
-            }
+            const header_t *header = item;
+            headers_len += snprintf(headers + headers_len, sizeof(headers) - headers_len,
+                                    "%s: %s\r\n", header->name, header->value);
         }
-        else
-        {
-            snprintf((char *)buff, sizeof(buff), "%s", response);
-            if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
-                err_n_die("Error while sending");
-        }
+
+        snprintf((char *)buff, sizeof(buff),
+                 "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\n%s\r\n\r\n%s",
+                 http_res->status_code, http_res->reason, http_res->content_type, res_len, date_str,
+                 headers, res);
+
+        if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
+            err_n_die("Error while sending");
     }
     else
     {
-        snprintf((char *)buff, sizeof(buff), "%s", hello);
+        // return 404 if the route doesn't exist
+        const char *not_found = "404 Not Found";
+        const char *content_type = "text/plain";
+        const char *server = "kraken";
+        const char *content = "The requested resource was not found";
+
+        snprintf((char *)buff, sizeof(buff),
+                 "HTTP/1.1 %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\nserver: %s\r\n\r\n%s",
+                 not_found, content_type, strlen(content), date_str, server, content);
+
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
             err_n_die("Error while sending");
     }
 
     close(client_server->conn_fd);
+    http_res_free(http_res);
     http_req_free(http_req);
     free(client_server);
 
@@ -232,9 +247,9 @@ void http_server_listen(http_server_t *server)
     handle_clients(server);
 }
 
-int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req))
+int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req, http_res_t *res))
 {
-    if (owl_hashmap_oom(server->routes)) return -1;
+    if (owl_hashmap_oom(server->routes)) err_n_die("Routes Map Out of Memory");
 
     owl_hashmap_set(server->routes, &(http_route_t){.uri = uri, .handler = handler});
 
@@ -244,6 +259,7 @@ int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t
 void http_server_free(http_server_t *server)
 {
     owl_hashmap_free(server->routes);
+    http_status_map_free(server->http_status_map);
     server_free(server->server);
     free(server);
 }
