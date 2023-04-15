@@ -127,16 +127,11 @@ void *client_handler(void *arg)
         err_n_die("read error");
 
     // get the http headers
-    printf("Req str: %s", req_string);
     http_req_t *http_req = http_req_init((char *)req_string);
     owl_hashmap_t *routes_map = client_server->server->routes;
     owl_hashmap_t *http_status_map = client_server->server->http_status_map;
 
     http_res_t *http_res = http_res_init();
-    status_code_with_reason_t *scr = owl_hashmap_get(http_status_map,
-                                                     &(status_code_with_reason_t){.code = http_res->status_code});
-
-    if (scr) http_res->reason = scr->reason;
 
     http_route_t *route = owl_hashmap_get(routes_map, &(http_route_t){.uri = http_req->uri});
 
@@ -152,6 +147,13 @@ void *client_handler(void *arg)
         char *res = route->handler(http_req, http_res);
         size_t res_len = strlen(res);
 
+        // get the reason string from the status map
+        status_code_with_reason_t *scr = owl_hashmap_get(http_status_map,
+                                                         &(status_code_with_reason_t){.code = http_res->status_code});
+        if (!scr) err_n_die("%d http status is not supported by the server.", http_res->status_code);
+        http_res->reason = scr->reason;
+
+        // format headers to send in the response
         char headers[MAX_HEADER_LEN] = "";
         size_t headers_len = 0;
         void *item;
@@ -163,6 +165,7 @@ void *client_handler(void *arg)
                                     "%s: %s\r\n", header->name, header->value);
         }
 
+        // format the response string
         snprintf((char *)buff, sizeof(buff),
                  "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\n%s\r\n\r\n%s",
                  http_res->status_code, http_res->reason, http_res->content_type, res_len, date_str,
