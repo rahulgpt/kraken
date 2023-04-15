@@ -7,6 +7,7 @@
 #include "server.h"
 #include <errno.h>
 #include <netdb.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +26,9 @@
 static void handle_clients(http_server_t *server);
 char *bin2hex(const unsigned char *input, size_t len);
 void err_n_die(char *fmt, ...);
+void handle_interrupt(int signal_num);
+
+static http_server_t *server;
 
 typedef struct
 {
@@ -58,6 +62,11 @@ http_server_t *http_server_init(int port, int backlog)
 
     http_server->http_status_map = http_status_map_init();
 
+    // bind the global server var to the latest instance
+    server = http_server;
+
+    signal(SIGINT, handle_interrupt);
+
     return http_server;
 }
 
@@ -74,6 +83,7 @@ static void handle_clients(http_server_t *http_server)
 {
     int addrlen = sizeof(http_server->server->address);
     owl_thread_pool_t *tp = owl_thread_pool_init(THREADS);
+    http_server->thread_pool = tp;
 
     owl_println("[🐙] Server started listening on port %d", PORT);
 
@@ -92,8 +102,6 @@ static void handle_clients(http_server_t *http_server)
         owl_worker_task_t handle_client = owl_worker_task_init(client_handler, client_server);
         owl_thread_pool_enqueue_task(tp, &handle_client);
     }
-
-    owl_thread_pool_free(tp);
 }
 
 // thread function
@@ -173,6 +181,10 @@ void *client_handler(void *arg)
 
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
             err_n_die("Error while sending");
+    }
+    else if (client_server->server->static_files_path)
+    {
+        // send the static file
     }
     else
     {
@@ -259,10 +271,28 @@ int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t
     return 0;
 }
 
+void register_static(http_server_t *server, char *path)
+{
+    server->static_files_path = path;
+}
+
 void http_server_free(http_server_t *server)
 {
+    owl_thread_pool_free(server->thread_pool);
     owl_hashmap_free(server->routes);
     http_status_map_free(server->http_status_map);
     server_free(server->server);
     free(server);
+}
+
+void handle_interrupt(int signal_num)
+{
+    owl_println("\n[🐙] Interrupt signal received. Shutting down");
+
+    if (server)
+    {
+        http_server_free(server);
+    }
+
+    exit(signal_num);
 }
