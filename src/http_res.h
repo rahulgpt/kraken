@@ -1,12 +1,17 @@
 #ifndef http_res_h
 #define http_res_h
 
+#include "../external/include/owl/collections/hashmap.h"
 #include <stdlib.h>
 
 typedef struct
 {
-
-} http_res;
+    int status_code;
+    char *reason;
+    owl_hashmap_t *headers;
+    char *response;
+    char *content_type;
+} http_res_t;
 
 typedef enum
 {
@@ -33,11 +38,16 @@ typedef struct
     char *value;
 } placeholder_t;
 
-char *http_res_render(int count, ...);
-void http_res_status(http_status_t status);
+http_res_t *http_res_init();
+void http_res_free(http_res_t *res);
+
+void res_status(http_res_t *res, http_status_t status_code);
+void res_content_type(http_res_t *res, char *content_type);
 
 // utility functions to render templates dynamically
-char *render_template(const char *template, placeholder_t *placeholders, size_t num_placeholders);
-char *render_template_file(const char *filepath, placeholder_t *placeholders, size_t num_placeholders);
+char *res_render_template(const char *template, placeholder_t *placeholders, size_t num_placeholders);
+char *res_render_template_file(const char *filepath, placeholder_t *placeholders, size_t num_placeholders);
+
+#define NUM_PLACEHOLDERS(placeholders) sizeof(placeholders) / sizeof(placeholder_t)
 
 #endif /* http_res_h */
