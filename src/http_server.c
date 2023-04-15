@@ -19,9 +19,13 @@
 #define BACKLOG 10
 #define MAX_BACKLOG 1000
 #define THREADS 20
+#define BUFF_SIZE 4096
 
 #define MAX_LINE 4096
 #define MAX_HEADER_LEN 1024
+#define MAX_PATH_LEN 100
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static void handle_clients(http_server_t *server);
 char *bin2hex(const unsigned char *input, size_t len);
@@ -61,6 +65,7 @@ http_server_t *http_server_init(int port, int backlog)
                                           route_hash, route_compare, NULL, NULL);
 
     http_server->http_status_map = http_status_map_init();
+    http_server->num_registered_file_paths = 0;
 
     // bind the global server var to the latest instance
     server = http_server;
@@ -172,21 +177,117 @@ void *client_handler(void *arg)
             headers_len += snprintf(headers + headers_len, sizeof(headers) - headers_len,
                                     "%s: %s\r\n", header->name, header->value);
         }
-
         // format the response string
+        char chunk[BUFF_SIZE];
+        size_t bytes_sent = 0;
+        size_t bytes_remaining = res_len;
         snprintf((char *)buff, sizeof(buff),
-                 "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\n%s\r\n\r\n%s",
-                 http_res->status_code, http_res->reason, http_res->content_type, res_len, date_str,
-                 headers, res);
+                 "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\n%s\r\n\r\n",
+                 http_res->status_code, http_res->reason, http_res->content_type, res_len, date_str, headers);
+        headers_len = strlen((char *)buff);
+        if (send(client_server->conn_fd, (char *)buff, headers_len, 0) < 0)
+            err_n_die("Error while sending headers");
+
+        while (bytes_remaining > 0)
+        {
+            size_t bytes_to_send = MIN(BUFF_SIZE, bytes_remaining);
+            memcpy(chunk, res + bytes_sent, bytes_to_send);
+            if (send(client_server->conn_fd, chunk, bytes_to_send, 0) < 0)
+            {
+                err_n_die("Error while sending response chunk");
+            }
+            bytes_sent += bytes_to_send;
+            bytes_remaining -= bytes_to_send;
+        }
+    }
+    else if (server->num_registered_file_paths > 0)
+    {
+        // send the static file
+        char filepath[MAX_PATH_LEN];
+        int found = 0;
+        for (int i = 0; i < server->num_registered_file_paths; i++)
+        {
+            snprintf(filepath, MAX_PATH_LEN, "%s%s", client_server->server->static_files_path[i], http_req->uri);
+
+            if (access(filepath, F_OK) == 0)
+            {
+                owl_println("filepath: %s", filepath);
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) goto send404;
+
+        FILE *fp = fopen(filepath, "rb");
+        if (!fp) goto send404;
+
+        // get the file size
+        fseek(fp, 0, SEEK_END);
+        long fsize = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+
+        char *content_type = "text/plain";
+        char *ext = strrchr(filepath, '.');
+        if (ext)
+        {
+            if (strcmp(ext, ".html") == 0)
+                content_type = "text/html";
+            else if (strcmp(ext, ".css") == 0)
+                content_type = "text/css";
+            else if (strcmp(ext, ".js") == 0)
+                content_type = "text/javascript";
+            else if (strcmp(ext, ".png") == 0)
+                content_type = "image/png";
+            else if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0)
+                content_type = "image/jpeg";
+            else if (strcmp(ext, ".gif") == 0)
+                content_type = "image/gif";
+            else if (strcmp(ext, ".svg") == 0)
+                content_type = "image/svg+xml";
+            else if (strcmp(ext, ".ico") == 0)
+                content_type = "image/x-icon";
+        }
+
+        // format headers to send in the response
+        char headers[MAX_HEADER_LEN] = "";
+        size_t headers_len = 0;
+        headers_len += snprintf(headers + headers_len, sizeof(headers) - headers_len,
+                                "Content-Type: %s\r\nContent-Length: %ld\r\n", content_type, fsize);
+
+        // format the response string for other content types
+        snprintf((char *)buff, sizeof(buff),
+                 "HTTP/1.1 200 OK\r\nDate: %s\r\n%s\r\n\r\n", date_str, headers);
 
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
             err_n_die("Error while sending");
-    }
-    else if (client_server->server->static_files_path)
-    {
-        // send the static file
+
+        // send the file in chunks
+        char file_buffer[BUFF_SIZE];
+        size_t bytes_read = 0;
+        while (bytes_read < fsize)
+        {
+            size_t bytes_to_read = fsize - bytes_read;
+            if (bytes_to_read > BUFF_SIZE)
+                bytes_to_read = BUFF_SIZE;
+
+            size_t result = fread(file_buffer, 1, bytes_to_read, fp);
+            if (result == 0)
+                break;
+
+            if (send(client_server->conn_fd, file_buffer, result, 0) < 0)
+            {
+                fclose(fp);
+                err_n_die("Error while sending");
+            }
+
+            bytes_read += result;
+        }
+
+        fclose(fp);
     }
     else
+    send404:
     {
         // return 404 if the route doesn't exist
         const char *not_found = "404 Not Found";
@@ -202,7 +303,7 @@ void *client_handler(void *arg)
             err_n_die("Error while sending");
     }
 
-    close(client_server->conn_fd);
+        close(client_server->conn_fd);
     http_res_free(http_res);
     http_req_free(http_req);
     free(client_server);
@@ -273,7 +374,7 @@ int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t
 
 void register_static(http_server_t *server, char *path)
 {
-    server->static_files_path = path;
+    server->static_files_path[server->num_registered_file_paths++] = path;
 }
 
 void http_server_free(http_server_t *server)
@@ -288,11 +389,6 @@ void http_server_free(http_server_t *server)
 void handle_interrupt(int signal_num)
 {
     owl_println("\n[🐙] Interrupt signal received. Shutting down");
-
-    if (server)
-    {
-        http_server_free(server);
-    }
-
+    if (server) http_server_free(server);
     exit(signal_num);
 }

@@ -7,13 +7,16 @@
 #include "http_res.h"
 #include "server.h"
 
+#define MAX_STATIC_FILES_PATH 10
+
 typedef struct http_server
 {
     server_t *server;
     owl_hashmap_t *routes;
     owl_hashmap_t *http_status_map;
     owl_thread_pool_t *thread_pool;
-    char *static_files_path;
+    char *static_files_path[MAX_STATIC_FILES_PATH];
+    short int num_registered_file_paths;
 } http_server_t;
 
 http_server_t *http_server_init(int port, int backlog);
