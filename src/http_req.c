@@ -14,12 +14,6 @@ static enum HTTPMethod select_method(char *method)
     exit(1);
 }
 
-typedef struct
-{
-    char *name;
-    char *value;
-} header_t;
-
 static int header_compare(const void *a, const void *b, void *udata)
 {
     const header_t *ha = a;
@@ -87,11 +81,10 @@ http_req_t *http_req_init(char *req_string)
     http_version = strtok(NULL, "/");
 
     req->method = select_method(method);
-    req->uri = uri;
+    req->uri = malloc(strlen(uri) + 1);
+    strcpy(req->uri, uri);
     req->http_version = (float)atof(http_version);
     req->headers = parse_http_headers(header_fields);
-
-    owl_hashmap_scan(req->headers, header_iter, NULL);
 
     return req;
 }
@@ -99,5 +92,6 @@ http_req_t *http_req_init(char *req_string)
 void http_req_free(http_req_t *http_req)
 {
     owl_hashmap_free(http_req->headers);
+    free(http_req->uri);
     free(http_req);
 }

@@ -5,6 +5,12 @@
 
 // This module can be responsible for parsing out the http request
 
+typedef struct
+{
+    char *name;
+    char *value;
+} header_t;
+
 enum HTTPMethod
 {
     GET,
