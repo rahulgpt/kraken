@@ -15,7 +15,7 @@ static int status_code_compare(const void *a, const void *b, void *udata)
 {
     const status_code_with_reason_t *ra = a;
     const status_code_with_reason_t *rb = b;
-    return ra->code == rb->code;
+    return ra->code == rb->code ? 0 : -1;
 }
 
 owl_hashmap_t *http_status_map_init()
@@ -30,21 +30,21 @@ owl_hashmap_t *http_status_map_init()
     }
 
     status_code_with_reason_t statuses[] = {
-        {100, "CONTINUE"},
+        {100, "Continue"},
         {200, "OK"},
-        {201, "CREATED"},
-        {202, "ACCEPTED"},
-        {204, "NO_CONTENT"},
-        {400, "BAD_REQUEST"},
-        {401, "UNAUTHORIZED"},
-        {403, "FORBIDDEN"},
-        {404, "NOT_FOUND"},
-        {405, "METHOD_NOT_ALLOWED"},
-        {500, "INTERNAL_SERVER_ERROR"},
-        {501, "NOT_IMPLEMENTED"},
-        {502, "BAD_GATEWAY"},
-        {503, "SERVICE_UNAVAILABLE"},
-        {504, "GATEWAY_TIMEOUT"}};
+        {201, "Created"},
+        {202, "Accepted"},
+        {204, "No Content"},
+        {400, "Bad Request"},
+        {401, "Unauthorized"},
+        {403, "Forbidden"},
+        {404, "Not Found"},
+        {405, "Method Not Allowed"},
+        {500, "Internal Server Error"},
+        {501, "Not Implemented"},
+        {502, "Bad Gateway"},
+        {503, "Service Unavailable"},
+        {504, "Gateway Timeout"}};
 
     const size_t num_statuses = sizeof(statuses) / sizeof(status_code_with_reason_t);
 
