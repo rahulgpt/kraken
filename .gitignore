@@ -54,5 +54,6 @@ dkms.conf
 .vscode/
 
 main
+public/
 icon.icns
 .DS_Store
