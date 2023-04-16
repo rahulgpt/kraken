@@ -6,14 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem;
+    }
+    .title {
+      color: darkolivegreen;
+      font-size: 3rem;
+    }
+    .content {
+      color: #000;
+      font-size: 1.1rem;
+    }
+    .time {
+      font-size: 1rem;
+      color: #464646;
+    }
+  </style>
   <body>
-    <p>title: {{title}}</p>
-    <div>
-      <div>
-        <p>{{content}}</p>
-      </div>
+    <div class="container">
+      <h1 class="title">{{title}} 👋</h1>
+      <p class="content">{{content}}</p>
+      <p class="time">Time {{something1}}</p>
+      <a href="/about">About</a>
     </div>
-    <p>{{something1}}</p>
-    <p>{{something2}}</p>
   </body>
 </html>
