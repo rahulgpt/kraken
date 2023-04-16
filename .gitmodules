@@ -1,0 +1,3 @@
+[submodule "external/owl"]
+	path = external/owl
+	url = https://github.com/rahulgpt/owl.git
