@@ -269,7 +269,10 @@ void *client_handler(void *arg)
                  "HTTP/1.1 200 OK\r\nDate: %s\r\nContent-Type: %s\r\nContent-Length: %ld\r\n%s\r\n\r\n", date_str, content_type, fsize, headers);
 
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
+        {
+            fclose(fp);
             err_n_die("Error while sending");
+        }
 
         // send the file in chunks
         char file_buffer[BUFF_SIZE];
