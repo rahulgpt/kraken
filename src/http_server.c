@@ -294,10 +294,16 @@ void *client_handler(void *arg)
             if (result == 0)
                 break;
 
-            if (send(client_server->conn_fd, file_buffer, result, 0) < 0)
+            size_t bytes_sent = 0;
+            while (bytes_sent < result)
             {
-                fclose(fp);
-                err_n_die("Error while sending");
+                ssize_t sent = send(client_server->conn_fd, file_buffer + bytes_sent, result - bytes_sent, 0);
+                if (sent == -1)
+                {
+                    fclose(fp);
+                    err_n_die("Error while sending");
+                }
+                bytes_sent += sent;
             }
 
             bytes_read += result;
