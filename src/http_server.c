@@ -199,10 +199,11 @@ void *client_handler(void *arg)
             bytes_sent += bytes_to_send;
             bytes_remaining -= bytes_to_send;
         }
+
+        // header_t *header = owl_hashmap_get(http_req->headers, &(header_t){.name = "Connection"});
     }
     else if (server->num_registered_file_paths > 0)
     {
-        // send the static file
         char filepath[MAX_PATH_LEN];
         int found = 0;
         for (int i = 0; i < server->num_registered_file_paths; i++)
@@ -247,17 +248,25 @@ void *client_handler(void *arg)
                 content_type = "image/svg+xml";
             else if (strcmp(ext, ".ico") == 0)
                 content_type = "image/x-icon";
+            else if (strcmp(ext, ".avif") == 0)
+                content_type = "image/avif";
         }
 
         // format headers to send in the response
         char headers[MAX_HEADER_LEN] = "";
         size_t headers_len = 0;
-        headers_len += snprintf(headers + headers_len, sizeof(headers) - headers_len,
-                                "Content-Type: %s\r\nContent-Length: %ld\r\n", content_type, fsize);
+        void *item;
+        size_t iter = 0;
+        while (owl_hashmap_iter(http_res->headers, &iter, &item))
+        {
+            const header_t *header = item;
+            headers_len += snprintf(headers + headers_len, sizeof(headers) - headers_len,
+                                    "%s: %s\r\n", header->name, header->value);
+        }
 
         // format the response string for other content types
         snprintf((char *)buff, sizeof(buff),
-                 "HTTP/1.1 200 OK\r\nDate: %s\r\n%s\r\n\r\n", date_str, headers);
+                 "HTTP/1.1 200 OK\r\nDate: %s\r\nContent-Type: %s\r\nContent-Length: %ld\r\n%s\r\n\r\n", date_str, content_type, fsize, headers);
 
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
             err_n_die("Error while sending");
