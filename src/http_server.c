@@ -220,14 +220,6 @@ void *client_handler(void *arg)
 
         if (!found) goto send404;
 
-        FILE *fp = fopen(filepath, "rb");
-        if (!fp) goto send404;
-
-        // get the file size
-        fseek(fp, 0, SEEK_END);
-        long fsize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-
         char *content_type = "text/plain";
         char *ext = strrchr(filepath, '.');
         if (ext)
@@ -252,6 +244,21 @@ void *client_handler(void *arg)
                 content_type = "image/avif";
         }
 
+        FILE *fp;
+        // images should be sent as binary while text/* should be sent as
+        // plain text
+        if (strstr(content_type, "image/"))
+            fp = fopen(filepath, "rb");
+        else
+            fp = fopen(filepath, "r");
+
+        if (!fp) goto send404;
+
+        // get the file size
+        fseek(fp, 0, SEEK_END);
+        long fsize = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+
         // format headers to send in the response
         char headers[MAX_HEADER_LEN] = "";
         size_t headers_len = 0;
@@ -274,7 +281,7 @@ void *client_handler(void *arg)
             err_n_die("Error while sending");
         }
 
-        // send the file in chunks
+        // send file in chunks
         char file_buffer[BUFF_SIZE];
         size_t bytes_read = 0;
         while (bytes_read < fsize)
