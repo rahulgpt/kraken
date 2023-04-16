@@ -47,6 +47,7 @@ void res_content_type(http_res_t *res, char *content_type);
 // utility functions to render templates dynamically
 char *res_render_template(const char *template, placeholder_t *placeholders, size_t num_placeholders);
 char *res_render_template_file(const char *filepath, placeholder_t *placeholders, size_t num_placeholders);
+char *res_render_static_file(const char *filepath);
 
 #define NUM_PLACEHOLDERS(placeholders) sizeof(placeholders) / sizeof(placeholder_t)
 

@@ -35,7 +35,7 @@ http_res_t *http_res_init()
 
     // append default headers
     header_t headers[] = {
-        {"server", "kraken"}};
+        {"server", "kraken/0.1.0"}};
 
     const size_t num_headers = sizeof(headers) / sizeof(header_t);
 
@@ -133,4 +133,9 @@ char *res_render_template_file(const char *filepath, placeholder_t *placeholders
     free(template);
 
     return result;
+}
+
+char *res_render_static_file(const char *filepath)
+{
+    return res_render_template_file(filepath, NULL, 0);
 }
