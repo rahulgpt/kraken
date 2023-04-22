@@ -1,9 +1,3 @@
-// @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
-
-const lightCodeTheme = require("prism-react-renderer/themes/github");
-const darkCodeTheme = require("prism-react-renderer/themes/dracula");
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Kraken",
@@ -15,9 +9,6 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
-
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
   organizationName: "rahulgpt", // Usually your GitHub org/user name.
   projectName: "kraken/docs", // Usually your repo name.
 
@@ -39,17 +30,10 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
+          routeBasePath: "/",
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
-        },
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          editUrl: "https://github.com/rahulgtp/kraken/edit/main/docs/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -64,19 +48,26 @@ const config = {
       // Replace with your project's social card
       image: "img/docusaurus-social-card.jpg",
       navbar: {
-        title: "Kraken",
-        logo: {
-          alt: "Kraken Logo",
-          src: "img/kraken.png",
-        },
+        title: "🐙 Kraken",
+        hideOnScroll: true,
         items: [
           {
-            type: "docSidebar",
-            sidebarId: "tutorialSidebar",
+            to: "/",
+            activeBasePath: "docs",
+            label: "Docs",
             position: "left",
-            label: "Tutorial",
           },
-          { to: "/blog", label: "Blog", position: "left" },
+          {
+            to: "api/http-server",
+            activeBasePath: "api",
+            label: "API",
+            position: "left",
+          },
+          {
+            href: "https://github.com/rahulgpt/kraken/issues/new/choose",
+            label: "Feedback",
+            position: "right",
+          },
           {
             href: "https://github.com/rahulgpt/kraken",
             label: "GitHub",
@@ -104,12 +95,8 @@ const config = {
                 href: "https://stackoverflow.com/questions/tagged/kraken",
               },
               {
-                label: "Discord",
-                href: "https://discordapp.com/invite/docusaurus",
-              },
-              {
                 label: "Twitter",
-                href: "https://twitter.com/docusaurus",
+                href: "https://twitter.com/RHGPT",
               },
             ],
           },
@@ -127,11 +114,24 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Kraken, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Rahul Gupta. Built with Docusaurus.`,
       },
       prism: {
-        theme: lightCodeTheme,
-        darkTheme: darkCodeTheme,
+        theme: require("prism-react-renderer/themes/github"),
+        darkTheme: require("prism-react-renderer/themes/dracula"),
+      },
+      announcementBar: {
+        id: "notice",
+        backgroundColor: "#2250F4",
+        isCloseable: false,
+        textColor: "white",
+        content: `
+          <div style="font-weight: 700; margin: 2px;">
+            <span >
+            ❕Kraken is built as my final year project. It's not even close to a complete production ready http server.
+            </span>
+          </div>
+          `,
       },
     }),
 };

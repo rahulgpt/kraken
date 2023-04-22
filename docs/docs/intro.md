@@ -1,47 +1,27 @@
 ---
-sidebar_position: 1
+slug: /
 ---
 
-# Tutorial Intro
+# Introduction
 
-Let's discover **Kraken in less than 5 minutes**.
+Welcome to the Kraken Docs 🎉
 
-## Getting Started
+These pages aim to guide your usage of Kraken and answer all questions you might have. If there's anything missing or unclear, make sure to put it in the "Feedback" form that's accessible via the menu bar.
 
-Get started by **creating a new site**.
+## Using the docs
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+The Quirrel Docs are divided into three main sections:
 
-### What you'll need
+- _Getting Started_ (on the sidebar) is the entrypoint for new Kraken users. It guides you through setting up your first website using kraken.
+- _API_ (reachable via the menu bar) is for development. It talks about the meaning of all the different Kraken parameters.
+- _Deploying_ (on the sidebar) is for when your project goes live. It guides you through making the right settings with your hosting provider.
 
-- [Node.js](https://nodejs.org/en/download/) version 16.14 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+## Wtf is "Kraken"
 
-## Generate a new site
+If you've been brought here by some link and haven't heard about Kraken before:
+Kraken is a express like framework for building sites in c.
 
-Generate a new Docusaurus site using the **classic template**.
+Possible use-cases for Kraken include:
 
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+- Introduction to web development early on when you are just learning c as your first language.
+- Can be used to serve static content.
