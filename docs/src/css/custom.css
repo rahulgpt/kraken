@@ -26,3 +26,16 @@
   --ifm-color-primary-lightest: #cccccc;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+div[class^="announcementBar_"] {
+  --site-announcement-bar-stripe-color1: #bff3e7;
+  --site-announcement-bar-stripe-color2: #eafbf7;
+  background: repeating-linear-gradient(
+    35deg,
+    var(--site-announcement-bar-stripe-color1),
+    var(--site-announcement-bar-stripe-color1) 20px,
+    var(--site-announcement-bar-stripe-color2) 10px,
+    var(--site-announcement-bar-stripe-color2) 40px
+  );
+  font-weight: bold;
+}

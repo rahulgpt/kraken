@@ -122,20 +122,11 @@ const config = {
       },
       prism: {
         theme: require("prism-react-renderer/themes/github"),
-        darkTheme: require("prism-react-renderer/themes/dracula"),
+        darkTheme: require("prism-react-renderer/themes/vsDark"),
       },
       announcementBar: {
-        id: "notice",
-        backgroundColor: "#2250F4",
-        isCloseable: false,
-        textColor: "white",
-        content: `
-          <div style="font-weight: 700; margin: 2px;">
-            <span >
-            ❕Kraken is built as my final year project. It's not even close to a complete production ready http server.
-            </span>
-          </div>
-          `,
+        id: "announcementBar-0", // Increment on change
+        content: `⭐️ If you like Kraken, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/rahulgpt/kraken">GitHub</a>`,
       },
     }),
 };
