@@ -2,7 +2,40 @@
 
 A simple [http server](https://en.wikipedia.org/wiki/HTTP_server) written in c
 
+## Quick Example
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "kraken.h"
+
+#define PORT 8000
+#define BACKLOG 10
+
+char *index_handler(http_req_t *req, http_res_t *res)
+{
+    return res_send("Hello World");
+}
+
+int main()
+{
+    http_server_t *server = http_server_init(PORT, BACKLOG);
+
+    // register a endpoint
+    register_route(server, "/", index_handler);
+
+    // register static files directory
+    register_static(server, "public");
+
+    http_server_listen(server);
+    http_server_free(server);
+}
+```
+
 ## Docs
+
+https://krakendocs.netlify.app/
 
 ## Disclaimer
 
