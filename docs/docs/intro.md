@@ -14,17 +14,17 @@ The Kraken Docs are divided into three main sections:
 
 - _Getting Started_ (on the sidebar) is the entrypoint for new Kraken users. It guides you through setting up your first website using kraken.
 - _API_ (reachable via the menu bar) is for development. It talks about the meaning of all the different Kraken parameters.
-- _Deploying_ (on the sidebar) is for when your project goes live. It guides you through making the right settings with your hosting provider.
+- _Examples_ (on the sidebar) contains different examples that shows various features of Kraken
 
 ## What is "Kraken"
 
-If you've been brought here by some link and haven't heard about Kraken before:
 Kraken is a express like framework for building sites in c.
 
 Possible use-cases for Kraken include:
 
 - Introduction to web development early on when you are just learning c as your first language.
-- Can be used to serve static content.
+- Can be used to serve static content from your machine.
+- Experimenting with web development in a language like C, which is not typically associated with web development, but can offer unique insights and perspectives on the craft.
 
 :::caution
 

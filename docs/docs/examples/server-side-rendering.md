@@ -1,5 +1,7 @@
 # Server Side Rendering
 
+This code example shows how to use Kraken, to implement server-side rendering with a basic templating system.
+
 ```c
 #include <stdio.h>
 #include <stdlib.h>

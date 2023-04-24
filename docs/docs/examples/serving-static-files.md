@@ -27,7 +27,7 @@ int main()
 }
 ```
 
-If you have a template that you want to serve for a path, you can use the `res_render_static_file` procedure. It takes the path to you template file as argument.
+If you have a template that you want to serve for a path, you can use the `res_render_static_file` procedure. It takes the path to your template file as an argument.
 
 ## Serving static files from a directory
 
@@ -52,9 +52,9 @@ int main()
 }
 ```
 
-If you want to serve some static files from your machine such as html, css or javascript files, you can regiter a static dir to the server. Kraken will automatically serve all of the files in this directory. The files will be accessible using the relative path and the file name with extension from the registered directory.
+If you want to serve some static files from your machine such as HTML, CSS, or JavaScript files, you can register a static directory to the server. Kraken will automatically serve all of the files in this directory. The files will be accessible using the relative path and the file name with extension from the registered directory.
 
-For example, in the above block of code we are registering public as a static directly. Suppose our public folder looks like this.
+For example, in the above block of code, we are registering "public" as a static directory. Suppose our "public" folder looks like this:
 
 ```bash title="public/"
 .
@@ -73,4 +73,4 @@ For example, in the above block of code we are registering public as a static di
 └── test.html
 ```
 
-The file called test.html can be accessed by going to `/test.html` in the browser, while the image called burger.jpg will be at `/images/burger.jpg`.
+The file called "test.html" can be accessed by going to "/test.html" in the browser, while the image called "burger.jpg" will be at "/images/burger.jpg".

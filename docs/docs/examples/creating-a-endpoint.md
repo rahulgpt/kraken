@@ -31,37 +31,32 @@ int main()
 #include "kraken.h"
 ```
 
-Include a single header file called kraken.h to get access to all of the kraken procedures.
+This line includes the header file `kraken.h`, which gives access to all the procedures of Kraken.
 
 ```c
 #define PORT 8000
 #define BACKLOG 10
 ```
 
-We are defining the `port` on which we want out server to listen and the size of the `backlog`.
-Backlog specifies the number of connection that the server will queue if it's busy before rejecting.
-
-Although Kraken is a multi-threaded server and can handle multiple blocking connection with it's multi-threaded archietecture, we may still wanna specify the backlog in case all of the threads are busy. If you don't want to queue incoming connection, pass `NULL` as the backlog parameter.
+Here we define the `PORT` on which we want the server to listen and the `BACKLOG` size. `BACKLOG` specifies the number of connections that the server will queue if it's busy before rejecting them. It is important to note that although Kraken is a multi-threaded server that can handle multiple blocking connections with its multi-threaded architecture, we may still want to specify the `BACKLOG` in case all of the threads are busy. If you don't want to queue incoming connections, you can pass `NULL` as the `BACKLOG` parameter.
 
 ```c
 http_server_t *server = http_server_init(PORT, BACKLOG);
 ```
 
-We can initialize the server by using `http_server_init` procedure. It takes two arguments, port and backlog. We can pass them here as we already defined them above.
+This line initializes the server using the `http_server_init` function, which takes two arguments: `PORT` and `BACKLOG`. We can pass them as we already defined them above.
 
 ```c
 register_route(server, "/", index_handler);
 ```
 
-Next we are reistering a route in the server with this `register_route` procedure. It takes in three argument, the server on which we want to register a route, the route/path we want to register, and the route handler function for that path.
-
-The route handler function should have the signature `char *handler(http_req_t *req, http_res_t *res)`. The route handler will be called when you open the `/` path. More about the route handler later.
+This line registers a route in the server using the `register_route` procedure, which takes three arguments: the `server` on which we want to register a route, the route/path we want to register, and the route handler function for that path. The `route handler function` should have the signature `char *handler(http_req_t *req, http_res_t *res)`. It will be called when we open the `/` path.
 
 ```c
 http_server_listen(server);
 ```
 
-Next we are calling the `http_server_listen` procedure and passing the server we created as the argument. This function will make the server start listening for incoming connection on the specified port.
+This line starts the server listening for incoming connections on the specified port by calling the `http_server_listen` procedure with the `server` we created as the argument.
 
 :::note
 
@@ -73,7 +68,7 @@ All of the register procedures should be called before calling this function oth
 http_server_free(server);
 ```
 
-In the end when we are done with our server, we should call `http_server_free` to free any resources allocated by the server.
+This line frees any resources allocated by the server when we are done with it, by calling the `http_server_free` procedure.
 
 ```c
 char *index_handler(http_req_t *req, http_res_t *res)
@@ -82,4 +77,4 @@ char *index_handler(http_req_t *req, http_res_t *res)
 }
 ```
 
-Now let's talk about the handler function. The handler function passed to `register_route` should have the exact function signature. It should return a `char *` at the end. It will take the http_req and http_res as arguments. Every route handler function will receive `request` for checking various information about the incoming req and `response` for configuring the response. You can look more about the api in the API Reference section.
+This is the handler function. The handler function passed to `register_route` should have the exact function signature. It should return a `char *` at the end. It takes `http_req` and `http_res` as arguments. Every route handler function will receive request for checking various information about the incoming `request` and `response` for configuring the response. You can look more about the API in the API Reference section.
