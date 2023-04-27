@@ -2,7 +2,7 @@
 const config = {
   title: "Kraken",
   tagline: "A simple http server written in c",
-  favicon: "img/favicon.ico",
+  favicon: "img/favicon.png",
 
   // Set the production url of your site here
   url: process.env.url || "https://krakendocs.netlify.app",
@@ -48,7 +48,12 @@ const config = {
       // Replace with your project's social card
       image: "img/docusaurus-social-card.jpg",
       navbar: {
-        title: "🐙 Kraken",
+        logo: {
+          alt: "Kraken Logo",
+          src: "/img/kraken_logo.svg",
+          href: "https://krakendocs.netlify.app/",
+        },
+        title: "Kraken",
         hideOnScroll: true,
         items: [
           {
