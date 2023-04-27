@@ -24,7 +24,7 @@ else
 	LIBFILE = $(LIBDIR)/$(LIBNAME).a
 endif
 
-all: main
+all: main $(LIBFILE)
 
 debug:
 	@echo 'SRCS: "$(SRCS)"'

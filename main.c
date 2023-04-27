@@ -1,7 +1,5 @@
+#include "kraken.h"
 #include "owl/utils/log.h"
-#include "src/http_req.h"
-#include "src/http_res.h"
-#include "src/http_server.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,6 +44,7 @@ int main()
     register_static(server, "public");
     register_static(server, "react");
     register_static(server, "next");
+    register_static(server, "docs/build");
 
     http_server_listen(server);
     http_server_free(server);

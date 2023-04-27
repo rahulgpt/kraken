@@ -1,4 +1,4 @@
-<h1><img src="kraken.png" style="height: 30px;" > Kraken</h1>
+<h1><img src="assets/kraken_logo.png" style="height: 40px;" > Kraken</h1>
 
 A simple [http server](https://en.wikipedia.org/wiki/HTTP_server) written in c
 
