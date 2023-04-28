@@ -3,6 +3,7 @@ const sidebars = {
   home: [
     "intro",
     "getting-started",
+    "conventions",
     {
       type: "category",
       label: "Examples",
@@ -19,7 +20,7 @@ const sidebars = {
       type: "category",
       label: "API Reference",
       collapsed: false,
-      items: ["api/http-server"],
+      items: ["api/http-server", "api/http-req", "api/http-res"],
     },
   ],
 };
