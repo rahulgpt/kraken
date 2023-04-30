@@ -289,9 +289,11 @@ void *client_handler(void *arg)
                                     "%s: %s\r\n", header->name, header->value);
         }
 
-        // format the response string for other content types
+        // Format the response string for other content types
+        // Headers buffer contains a \r\n with the last header.
+        // We just need to add one \r\n at the end to separate the body
         snprintf((char *)buff, sizeof(buff),
-                 "HTTP/1.1 200 OK\r\nDate: %s\r\nContent-Type: %s\r\nContent-Length: %ld\r\n%s\r\n\r\n", date_str, content_type, fsize, headers);
+                 "HTTP/1.1 200 OK\r\nDate: %s\r\nContent-Type: %s\r\nContent-Length: %ld\r\n%s\r\n", date_str, content_type, fsize, headers);
 
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
         {
