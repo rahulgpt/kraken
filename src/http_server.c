@@ -272,6 +272,14 @@ void *client_handler(void *arg)
                 content_type = "video/webm";
             else if (strcmp(ext, ".ogg") == 0)
                 content_type = "video/ogg";
+            else if (strcmp(ext, ".ttf") == 0)
+                content_type = "font/ttf";
+            else if (strcmp(ext, ".otf") == 0)
+                content_type = "font/otf";
+            else if (strcmp(ext, ".woff") == 0)
+                content_type = "font/woff";
+            else if (strcmp(ext, ".woff2") == 0)
+                content_type = "font/woff2";
         }
 
         FILE *fp;
