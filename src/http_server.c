@@ -247,7 +247,13 @@ void *client_handler(void *arg)
             else if (strcmp(ext, ".css") == 0)
                 content_type = "text/css";
             else if (strcmp(ext, ".js") == 0)
-                content_type = "text/javascript";
+                content_type = "application/javascript";
+            else if (strcmp(ext, ".pdf") == 0)
+                content_type = "application/pdf";
+            else if (strcmp(ext, ".json") == 0)
+                content_type = "application/json";
+            else if (strcmp(ext, ".xml") == 0)
+                content_type = "application/xml";
             else if (strcmp(ext, ".png") == 0)
                 content_type = "image/png";
             else if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0)
