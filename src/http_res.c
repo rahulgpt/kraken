@@ -35,7 +35,7 @@ http_res_t *http_res_init()
 
     // append default headers
     header_t headers[] = {
-        {"server", "kraken/0.1.0"}};
+        {"server", "Kraken"}};
 
     const size_t num_headers = sizeof(headers) / sizeof(header_t);
 

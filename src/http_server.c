@@ -260,15 +260,21 @@ void *client_handler(void *arg)
                 content_type = "image/x-icon";
             else if (strcmp(ext, ".avif") == 0)
                 content_type = "image/avif";
+            else if (strcmp(ext, ".mp3") == 0)
+                content_type = "audio/mpeg";
+            else if (strcmp(ext, ".ogg") == 0)
+                content_type = "audio/ogg";
+            else if (strcmp(ext, ".wav") == 0)
+                content_type = "audio/wav";
         }
 
         FILE *fp;
         // images should be sent as binary while text/* should be sent as
         // plain text
-        if (strstr(content_type, "image/"))
-            fp = fopen(filepath, "rb");
-        else
+        if (strstr(content_type, "text/"))
             fp = fopen(filepath, "r");
+        else
+            fp = fopen(filepath, "rb");
 
         if (!fp) goto send404;
 
