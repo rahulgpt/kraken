@@ -266,6 +266,12 @@ void *client_handler(void *arg)
                 content_type = "audio/ogg";
             else if (strcmp(ext, ".wav") == 0)
                 content_type = "audio/wav";
+            else if (strcmp(ext, ".mp4") == 0)
+                content_type = "video/mp4";
+            else if (strcmp(ext, ".webm") == 0)
+                content_type = "video/webm";
+            else if (strcmp(ext, ".ogg") == 0)
+                content_type = "video/ogg";
         }
 
         FILE *fp;
