@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define PROTOCOL 0
@@ -208,13 +209,30 @@ void *client_handler(void *arg)
         int found = 0;
         for (int i = 0; i < server->num_registered_file_paths; i++)
         {
-            snprintf(filepath, MAX_PATH_LEN, "%s%s", client_server->server->static_files_path[i], http_req->uri);
+            snprintf(filepath, MAX_PATH_LEN, "%s%s", client_server->server->static_files_path[i], strcmp(http_req->uri, "/") == 0 ? "/index.html" : http_req->uri);
 
-            if (access(filepath, F_OK) == 0)
+            struct stat st;
+            if (stat(filepath, &st) == 0 && S_ISDIR(st.st_mode))
             {
-                owl_println("filepath: %s", filepath);
-                found = 1;
-                break;
+                // If filepath is a directory, check filepath inside it
+                snprintf(filepath, MAX_PATH_LEN, "%s/index.html", filepath);
+
+                if (access(filepath, F_OK) == 0)
+                {
+                    owl_println("filepath: %s", filepath);
+                    found = 1;
+                    break;
+                }
+            }
+            else
+            {
+                // If filepath is not a directory, check it directly
+                if (access(filepath, F_OK) == 0)
+                {
+                    owl_println("filepath: %s", filepath);
+                    found = 1;
+                    break;
+                }
             }
         }
 
