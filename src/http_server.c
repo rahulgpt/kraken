@@ -18,13 +18,14 @@
 #define PROTOCOL 0
 #define PORT 8000
 #define BACKLOG 10
-#define MAX_BACKLOG 1000
 #define THREADS 20
 #define BUFF_SIZE 4096
 
 #define MAX_LINE 4096
 #define MAX_HEADER_LEN 1024
 #define MAX_PATH_LEN 100
+#define MAX_BACKLOG 1000
+#define MAX_THREADS 50
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -54,10 +55,14 @@ static uint64_t route_hash(const void *item, uint64_t seed0, uint64_t seed1)
     return owl_hashmap_sip(route->uri, strlen(route->uri), seed0, seed1);
 }
 
-http_server_t *http_server_init(int port, int backlog)
+http_server_t *http_server_init(int port, int backlog, int threads)
 {
     if (!backlog || backlog < 10) backlog = BACKLOG;
     if (backlog > MAX_BACKLOG) backlog = MAX_BACKLOG;
+    if (!threads || threads < 0) threads = THREADS;
+    if (threads > MAX_THREADS) threads = MAX_THREADS;
+    if (threads == 0) threads = 1; // disable multi-threading
+    if (!port) port = PORT;
 
     http_server_t *http_server = malloc(sizeof(http_server_t));
     http_server->server = server_init(AF_INET, SOCK_STREAM, PROTOCOL, INADDR_ANY,
@@ -67,6 +72,8 @@ http_server_t *http_server_init(int port, int backlog)
 
     http_server->http_status_map = http_status_map_init();
     http_server->num_registered_file_paths = 0;
+    http_server->port = port;
+    http_server->threads = threads;
 
     // bind the global server var to the latest instance
     server = http_server;
@@ -88,10 +95,10 @@ void *client_handler(void *arg);
 static void handle_clients(http_server_t *http_server)
 {
     int addrlen = sizeof(http_server->server->address);
-    owl_thread_pool_t *tp = owl_thread_pool_init(THREADS);
+    owl_thread_pool_t *tp = owl_thread_pool_init(http_server->threads);
     http_server->thread_pool = tp;
 
-    owl_println("[🐙] Server started listening on port %d", PORT);
+    owl_println("[🐙] Server started listening on port %d", http_server->port);
 
     for (;;)
     {
@@ -209,7 +216,8 @@ void *client_handler(void *arg)
         int found = 0;
         for (int i = 0; i < server->num_registered_file_paths; i++)
         {
-            snprintf(filepath, MAX_PATH_LEN, "%s%s", client_server->server->static_files_path[i], strcmp(http_req->uri, "/") == 0 ? "/index.html" : http_req->uri);
+            snprintf(filepath, MAX_PATH_LEN, "%s%s", client_server->server->static_files_path[i],
+                     strcmp(http_req->uri, "/") == 0 ? "/index.html" : http_req->uri);
 
             struct stat st;
             if (stat(filepath, &st) == 0 && S_ISDIR(st.st_mode))

@@ -12,6 +12,8 @@
 typedef struct http_server
 {
     server_t *server;
+    int port;
+    int threads;
     owl_hashmap_t *routes;
     owl_hashmap_t *http_status_map;
     owl_thread_pool_t *thread_pool;
@@ -19,7 +21,7 @@ typedef struct http_server
     short int num_registered_file_paths;
 } http_server_t;
 
-http_server_t *http_server_init(int port, int backlog);
+http_server_t *http_server_init(int port, int backlog, int threads);
 int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req, http_res_t *res));
 void register_static(http_server_t *server, char *path);
 
