@@ -66,6 +66,7 @@ http_server_t *http_server_init(int port, int backlog, int threads)
     http_server->routes = owl_hashmap_new(sizeof(http_route_t), sizeof(http_route_t), 0, 0,
                                           route_hash, route_compare, NULL, NULL);
 
+    http_server->thread_pool = owl_thread_pool_init(THREADS);
     http_server->http_status_map = http_status_map_init();
     http_server->num_registered_file_paths = 0;
     http_server->port = port;
@@ -90,8 +91,7 @@ void *client_handler(void *arg);
 static void handle_clients(http_server_t *http_server)
 {
     int addrlen = sizeof(http_server->server->address);
-    owl_thread_pool_t *tp = owl_thread_pool_init(THREADS);
-    http_server->thread_pool = tp;
+    owl_thread_pool_t *tp = http_server->thread_pool;
 
     owl_println("[🐙] Server started listening on port %d", http_server->port);
 
