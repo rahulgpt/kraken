@@ -185,7 +185,7 @@ void *client_handler(void *arg)
         size_t bytes_sent = 0;
         size_t bytes_remaining = res_len;
         snprintf((char *)buff, sizeof(buff),
-                 "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\n%s\r\n\r\n",
+                 "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\n%s\r\n",
                  http_res->status_code, http_res->reason, http_res->content_type, res_len, date_str, headers);
         headers_len = strlen((char *)buff);
         if (send(client_server->conn_fd, (char *)buff, headers_len, 0) < 0)
