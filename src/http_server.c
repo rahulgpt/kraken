@@ -54,7 +54,7 @@ static uint64_t route_hash(const void *item, uint64_t seed0, uint64_t seed1)
     return owl_hashmap_sip(route->uri, strlen(route->uri), seed0, seed1);
 }
 
-http_server_t *http_server_init(int port, int backlog, int threads)
+http_server_t *http_server_init(int port, int backlog)
 {
     if (!backlog || backlog < 10) backlog = BACKLOG;
     if (backlog > MAX_BACKLOG) backlog = MAX_BACKLOG;

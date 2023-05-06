@@ -20,7 +20,7 @@ typedef struct http_server
     short int num_registered_file_paths;
 } http_server_t;
 
-http_server_t *http_server_init(int port, int backlog, int threads);
+http_server_t *http_server_init(int port, int backlog);
 int register_route(http_server_t *server, char *uri, char *(*handler)(http_req_t *req, http_res_t *res));
 void register_static(http_server_t *server, char *path);
 
