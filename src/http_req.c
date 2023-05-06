@@ -7,6 +7,13 @@ static enum HTTPMethod select_method(char *method)
 {
     if (strcmp(method, "GET") == 0) return GET;
     if (strcmp(method, "POST") == 0) return POST;
+    if (strcmp(method, "PUT") == 0) return PUT;
+    if (strcmp(method, "HEAD") == 0) return HEAD;
+    if (strcmp(method, "PATCH") == 0) return PATCH;
+    if (strcmp(method, "DELETE") == 0) return DELETE;
+    if (strcmp(method, "CONNECT") == 0) return CONNECT;
+    if (strcmp(method, "OPTIONS") == 0) return OPTIONS;
+    if (strcmp(method, "TRACE") == 0) return TRACE;
 
     // Handle this properly. Skip the connection if not supported
     // or respond appropriatly
