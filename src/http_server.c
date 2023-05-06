@@ -25,7 +25,6 @@
 #define MAX_HEADER_LEN 1024
 #define MAX_PATH_LEN 100
 #define MAX_BACKLOG 1000
-#define MAX_THREADS 50
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -59,9 +58,6 @@ http_server_t *http_server_init(int port, int backlog, int threads)
 {
     if (!backlog || backlog < 10) backlog = BACKLOG;
     if (backlog > MAX_BACKLOG) backlog = MAX_BACKLOG;
-    if (!threads || threads < 0) threads = THREADS;
-    if (threads > MAX_THREADS) threads = MAX_THREADS;
-    if (threads == 0) threads = 1; // disable multi-threading
     if (!port) port = PORT;
 
     http_server_t *http_server = malloc(sizeof(http_server_t));
@@ -73,7 +69,6 @@ http_server_t *http_server_init(int port, int backlog, int threads)
     http_server->http_status_map = http_status_map_init();
     http_server->num_registered_file_paths = 0;
     http_server->port = port;
-    http_server->threads = threads;
 
     // bind the global server var to the latest instance
     server = http_server;
@@ -95,7 +90,7 @@ void *client_handler(void *arg);
 static void handle_clients(http_server_t *http_server)
 {
     int addrlen = sizeof(http_server->server->address);
-    owl_thread_pool_t *tp = owl_thread_pool_init(http_server->threads);
+    owl_thread_pool_t *tp = owl_thread_pool_init(THREADS);
     http_server->thread_pool = tp;
 
     owl_println("[🐙] Server started listening on port %d", http_server->port);

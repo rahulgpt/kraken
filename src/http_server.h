@@ -13,7 +13,6 @@ typedef struct http_server
 {
     server_t *server;
     int port;
-    int threads;
     owl_hashmap_t *routes;
     owl_hashmap_t *http_status_map;
     owl_thread_pool_t *thread_pool;
