@@ -11,7 +11,7 @@
 
 char *index_handler(http_req_t *req, http_res_t *res)
 {
-    return res_send("Hello World");
+    return "<h1>Hello World</h1>";
 }
 
 int main()

@@ -18,7 +18,7 @@ A simple [http server](https://en.wikipedia.org/wiki/HTTP_server) written in c
 
 char *index_handler(http_req_t *req, http_res_t *res)
 {
-    return res_send("Hello World");
+    return "Hello World";
 }
 
 int main()
