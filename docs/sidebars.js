@@ -3,7 +3,6 @@ const sidebars = {
   home: [
     "intro",
     "getting-started",
-    "conventions",
     {
       type: "category",
       label: "Examples",
