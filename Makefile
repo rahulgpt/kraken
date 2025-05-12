@@ -24,7 +24,7 @@ else
 	LIBFILE = $(LIBDIR)/$(LIBNAME).a
 endif
 
-all: main $(LIBFILE)
+all: owl main $(LIBFILE)
 
 debug:
 	@echo 'SRCS: "$(SRCS)"'
@@ -33,6 +33,10 @@ debug:
 	@echo 'LIBFILE: "$(LIBFILE)"'
 	@echo 'CFLAGS: "$(CFLAGS)"'
 	@echo 'LDFLAGS: "$(LDFLAGS)"'
+
+owl:
+	@mkdir -p external/lib
+	@cd external/owl && make && cp lib/libowl.a ../lib/
 
 main: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBPATH) -lowl
@@ -57,7 +61,8 @@ $(LIBFILE): $(OBJS) | $(LIBDIR)
 	ar -rcs $@ $^
 endif
 
-.PHONY: clean all debug
+.PHONY: clean all debug owl
 
 clean:
 	rm -rf *.o */*.o main $(LIBDIR)/*.a $(LIBDIR)/*.so $(OBJDIR) $(LIBDIR)
+	cd external/owl && make clean
