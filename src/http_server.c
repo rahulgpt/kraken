@@ -161,6 +161,8 @@ void *client_handler(void *arg)
     {
         // After calling the handler, "http_res" will be populated
         char *res = route->handler(http_req, http_res);
+        if (!res) goto send404;
+        
         size_t res_len = strlen(res);
 
         // get the reason string from the status map
@@ -364,14 +366,27 @@ void *client_handler(void *arg)
     send404:
     {
         // return 404 if the route doesn't exist
-        const char *not_found = "404 Not Found";
-        const char *content_type = "text/plain";
-        const char *server = "kraken";
-        const char *content = "The requested resource was not found";
+        const char *content = "<!DOCTYPE html>\n"
+                            "<html>\n"
+                            "<head>\n"
+                            "    <title>404 Not Found</title>\n"
+                            "</head>\n"
+                            "<body>\n"
+                            "    <h1>404 Not Found</h1>\n"
+                            "    <p>The requested resource was not found on this server.</p>\n"
+                            "</body>\n"
+                            "</html>";
 
         snprintf((char *)buff, sizeof(buff),
-                 "HTTP/1.1 %s\r\nContent-Type: %s\r\nContent-Length: %zu\r\nDate: %s\r\nserver: %s\r\n\r\n%s",
-                 not_found, content_type, strlen(content), date_str, server, content);
+                 "HTTP/1.1 404 Not Found\r\n"
+                 "Content-Type: text/html\r\n"
+                 "Content-Length: %zu\r\n"
+                 "Date: %s\r\n"
+                 "Server: Kraken\r\n"
+                 "Connection: close\r\n"
+                 "Cache-Control: no-cache\r\n"
+                 "\r\n%s",
+                 strlen(content), date_str, content);
 
         if (send(client_server->conn_fd, (char *)buff, strlen((char *)buff), 0) < 0)
             err_n_die("Error while sending");
