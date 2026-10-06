@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kraken: an HTTP server written in C</title>
+    <meta name="description" content="A live page served by Kraken, a multi-threaded HTTP/1.1 server written from scratch in C. It shows your request exactly as the server read it off the socket." />
+    <link rel="icon" href="/kraken.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="/"><img src="/kraken.svg" alt="" width="28" height="28" /> Kraken</a>
+      <nav>
+        <a href="https://krakendocs.netlify.app">Docs</a>
+        <a href="https://github.com/rahulgpt/kraken">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow"><span class="dot"></span> served live by kraken &middot; {{start_kind}}</p>
+        <h1>This page was served by a web server I wrote in C.</h1>
+        <p class="lede">
+          No framework and no nginx in front. Kraken accepts the TCP connection with POSIX sockets, parses HTTP/1.1 by hand,
+          hands the request to a thread pool and renders this HTML from a template. Below is exactly what it saw when you asked for this page.
+        </p>
+      </section>
+
+      <section class="stats" aria-label="Server stats">
+        <div class="stat"><span class="label">Request</span><span class="value">#{{request_number}}</span><span class="hint">to this process</span></div>
+        <div class="stat"><span class="label">Process uptime</span><span class="value">{{uptime}}</span><span class="hint">pid {{pid}}</span></div>
+        <div class="stat"><span class="label">Handled by</span><span class="value">worker {{worker}}</span><span class="hint">from a pool of 20 threads</span></div>
+        <div class="stat"><span class="label">Handler time</span><span class="value">{{micros}} &micro;s</span><span class="hint">parse to render</span></div>
+      </section>
+      <p class="note">{{start_note}} Started {{boot}}.</p>
+
+      <section>
+        <h2><span class="step">1</span> The bytes that arrived</h2>
+        <p>
+          This is the request as <code>recv()</code> returned it, {{raw_size}} bytes. Control characters are shown, so you can see the
+          <code>\r\n</code> after every line and the empty line that ends the headers.
+        </p>
+        <pre class="raw">{{raw}}</pre>
+        <details>
+          <summary>Same bytes as a hex dump</summary>
+          <pre class="hex">{{hex}}</pre>
+        </details>
+      </section>
+
+      <section>
+        <h2><span class="step">2</span> What the parser made of it</h2>
+        <p>Kraken splits the request line, decodes the path and query string, and stores the headers in a hash map (SipHash) with lowercased names.</p>
+        <dl class="parsed">
+          <div><dt>Method</dt><dd><code>{{method}}</code></dd></div>
+          <div><dt>Path</dt><dd><code>{{path}}</code></dd></div>
+          <div><dt>Query</dt><dd><code>{{query}}</code></dd></div>
+          <div><dt>Version</dt><dd><code>{{version}}</code></dd></div>
+          <div><dt>Body</dt><dd><code>{{body_len}}</code></dd></div>
+          <div><dt>Socket peer</dt><dd><code>{{peer}}</code></dd></div>
+        </dl>
+        <details open>
+          <summary>{{header_count}} headers</summary>
+          <div class="table-wrap">
+            <table>
+              <tbody>
+                {{headers}}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section>
+        <h2><span class="step">3</span> How your request got here</h2>
+        <ol class="flow">
+          <li><strong>Cloudflare</strong> terminated TLS for <code>kraken.rahulgpt.com</code> and a tiny Worker forwarded the request to AWS.</li>
+          <li><strong>AWS Lambda</strong> started this process if none was warm. Kraken is a normal long running server, so Lambda runs it as is and pays nothing while idle.</li>
+          <li>The <strong>Lambda Web Adapter</strong> turned the event back into plain HTTP and opened a TCP connection to <code>127.0.0.1:8000</code>. That is the socket peer you see above.</li>
+          <li><strong>Kraken</strong> <code>accept()</code>ed it, queued it on the thread pool, read the bytes, parsed them, looked up <code>/</code> in the route table and ran the handler that rendered this page.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2><span class="step">4</span> Try it</h2>
+        <div class="routes">
+          <a class="route" href="/hello?name=recruiter"><code>GET /hello?name=recruiter</code><span>Query parameters in a template</span></a>
+          <a class="route" href="/api/request?lang=c"><code>GET /api/request</code><span>Your request as JSON</span></a>
+          <a class="route" href="/home"><code>GET /home</code><span>Template file rendered on the server</span></a>
+          <a class="route" href="/style.css"><code>GET /style.css</code><span>Static file with MIME detection</span></a>
+          <a class="route" href="/echo"><code>GET /echo</code><span>405 with an Allow header</span></a>
+          <a class="route" href="/this/does/not/exist"><code>GET /this/does/not/exist</code><span>404 page</span></a>
+        </div>
+        <p>Or from a terminal:</p>
+        <pre class="cmd"><span class="dim">$</span> curl -i https://kraken.rahulgpt.com/api/request
+<span class="dim">$</span> curl -X POST -d 'hello kraken' https://kraken.rahulgpt.com/echo
+<span class="dim">$</span> curl -I https://kraken.rahulgpt.com/</pre>
+      </section>
+
+      <section>
+        <h2>What's inside</h2>
+        <ul class="features">
+          <li><strong>Sockets</strong><span>socket, bind, listen and accept on a plain TCP port, with receive timeouts so idle clients can't pin a worker.</span></li>
+          <li><strong>Thread pool</strong><span>Connections are queued and handled by 20 worker threads from <a href="https://github.com/rahulgpt/owl">owl</a>, my C utility library.</span></li>
+          <li><strong>HTTP/1.1 parser</strong><span>Request line, headers, Content-Length bodies, url decoding and query strings. Malformed requests get a 400.</span></li>
+          <li><strong>Routing</strong><span>Express style <code>register_route(server, "/hello", handler)</code> with O(1) hash map lookup.</span></li>
+          <li><strong>Static files</strong><span>Multiple static directories, index.html for folders, MIME types, chunked file reads and path traversal protection.</span></li>
+          <li><strong>Templates</strong><span>Single pass <code>{{placeholder}}</code> rendering from strings or files, the same thing that built this page.</span></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>Kraken was my final year project, written by hand to learn how web servers work. <a href="https://github.com/rahulgpt/kraken">Source on GitHub</a> &middot; <a href="https://krakendocs.netlify.app">Documentation</a></p>
+    </footer>
+  </body>
+</html>
