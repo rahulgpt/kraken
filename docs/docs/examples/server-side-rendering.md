@@ -57,3 +57,39 @@ res_render_template_file("./template.html", placeholders, NUM_PLACEHOLDERS(place
 We are using `res_render_template_file` procedure to render a dynamic template file with placeholders. It takes three argument. First is the `path` to the template file. Second is the placeholder values array and the third is the number of items in the placeholder array.
 
 You can pass `3` manually here but if the number of placeholder items change then you need to remember to update it. Kraken comes with a utility macro called `NUM_PLACEHOLDERS` which takes the placeholders array and calculates the number of items in it.
+
+The template could look like this:
+
+```html title="template.html"
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>{{title}}</h1>
+    <p>{{content}}</p>
+    <p>Rendered at {{time}}</p>
+  </body>
+</html>
+```
+
+## Things to know
+
+- Placeholders can appear in any order and any number of times in the template.
+- The template is scanned once, so a value that itself contains `{{...}}` is inserted as is and never replaced again.
+- Kraken doesn't escape values. If a value comes from the user (a query parameter, a header, the body), escape `<`, `>`, `&` and quotes before passing it in, otherwise visitors can inject HTML into your page.
+- The rendered string belongs to Kraken and is freed after the response is sent, so just return it.
+
+## Rendering a template from a string
+
+If the template is small, `res_render_template` takes the template as a string instead of a file path:
+
+```c
+char *greet_handler(http_req_t *req, http_res_t *res)
+{
+    placeholder_t placeholders[] = {
+        {"{{name}}", "Kraken"},
+    };
+
+    return res_render_template("<h1>Hello {{name}}</h1>", placeholders,
+                               NUM_PLACEHOLDERS(placeholders));
+}
+```

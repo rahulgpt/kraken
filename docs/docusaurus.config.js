@@ -1,7 +1,7 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Kraken",
-  tagline: "A simple http server written in c",
+  tagline: "A multi-threaded http server written in c",
   favicon: "img/favicon.png",
 
   // Set the production url of your site here
@@ -33,7 +33,7 @@ const config = {
           routeBasePath: "/",
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/rahulgtp/kraken/edit/main/docs/",
+          editUrl: "https://github.com/rahulgpt/kraken/edit/main/docs/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -69,6 +69,16 @@ const config = {
             position: "left",
           },
           {
+            to: "/blog",
+            label: "Blog",
+            position: "left",
+          },
+          {
+            href: "https://kraken.rahulgpt.com",
+            label: "Live demo",
+            position: "right",
+          },
+          {
             href: "https://github.com/rahulgpt/kraken/issues/new/choose",
             label: "Feedback",
             position: "right",
@@ -94,6 +104,14 @@ const config = {
                 label: "Getting Started",
                 to: "/getting-started",
               },
+              {
+                label: "How It Works",
+                to: "/how-it-works",
+              },
+              {
+                label: "Deploying",
+                to: "/deploying",
+              },
             ],
           },
           {
@@ -112,6 +130,14 @@ const config = {
           {
             title: "More",
             items: [
+              {
+                label: "Live demo",
+                href: "https://kraken.rahulgpt.com",
+              },
+              {
+                label: "Blog",
+                to: "/blog",
+              },
               {
                 label: "API",
                 to: "/api/http-server",

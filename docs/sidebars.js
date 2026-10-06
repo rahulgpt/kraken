@@ -9,10 +9,14 @@ const sidebars = {
       collapsed: false,
       items: [
         "examples/creating-a-endpoint",
+        "examples/reading-request-data",
+        "examples/status-codes-and-headers",
         "examples/serving-static-files",
         "examples/server-side-rendering",
       ],
     },
+    "how-it-works",
+    "deploying",
   ],
   docs: [
     {
