@@ -44,10 +44,30 @@ void http_res_free(http_res_t *res);
 void res_status(http_res_t *res, http_status_t status_code);
 void res_content_type(http_res_t *res, char *content_type);
 
-// utility functions to render templates dynamically
+/*
+ * Add a response header, e.g. res_header(res, "Cache-Control", "no-store").
+ * Both strings are copied, so they don't need to outlive the handler.
+ */
+void res_header(http_res_t *res, const char *name, const char *value);
+
+// utility functions to render templates dynamically.
+// The returned strings are owned by kraken and freed after the response is sent.
 char *res_render_template(const char *template, placeholder_t *placeholders, size_t num_placeholders);
 char *res_render_template_file(const char *filepath, placeholder_t *placeholders, size_t num_placeholders);
 char *res_render_static_file(const char *filepath);
+
+/*
+ * printf style helper for building a response body, e.g.
+ * return res_sendf("<h1>Hello %s</h1>", name);
+ * Like the render functions, the returned string is owned by kraken.
+ */
+char *res_sendf(const char *fmt, ...);
+
+/*
+ * Frees every string rendered on the calling thread. The server calls this
+ * after each response, handlers don't need to.
+ */
+void res_free_rendered(void);
 
 #define NUM_PLACEHOLDERS(placeholders) sizeof(placeholders) / sizeof(placeholder_t)
 

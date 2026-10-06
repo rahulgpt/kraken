@@ -21,11 +21,16 @@ server_t *server_init(int domain, int service, int protocol, u_long interface, i
     server->address.sin_addr.s_addr = htonl(interface);
 
     server->socket_fd = socket(domain, service, protocol);
-    if (server->socket_fd == 0)
+    if (server->socket_fd < 0)
     {
-        perror("Failed to connect socket...\n");
+        perror("Failed to create socket...\n");
         exit(1);
     }
+
+    // allow restarting the server right away, without waiting for
+    // connections from the previous run to leave the TIME_WAIT state
+    int reuse = 1;
+    setsockopt(server->socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
     if ((bind(server->socket_fd, (struct sockaddr *)&server->address, sizeof(server->address))) < 0)
     {
