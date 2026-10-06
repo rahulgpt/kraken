@@ -1,0 +1,6 @@
+#!/bin/sh
+# Lambda entrypoint. The Lambda Web Adapter layer (an extension) talks to the
+# Lambda runtime API and forwards each invocation as a plain HTTP request to
+# this server on $PORT, so kraken runs unmodified with its own sockets.
+cd "$LAMBDA_TASK_ROOT" || exit 1
+exec ./main

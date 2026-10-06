@@ -1,0 +1,11 @@
+{
+    "name": "kraken-proxy",
+    "main": "src/index.js",
+    "compatibility_date": "2026-10-01",
+    // custom_domain makes Cloudflare create the DNS record and HTTPS cert
+    "routes": [{ "pattern": "kraken.rahulgpt.com", "custom_domain": true }],
+    "vars": {
+        // printed by deploy/lambda/deploy.sh
+        "KRAKEN_ORIGIN": "https://vxdacx4huakl7juwnhoa6imery0punao.lambda-url.ap-south-1.on.aws"
+    }
+}

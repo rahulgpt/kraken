@@ -36,3 +36,6 @@ icon.icns
 public/
 react/
 next/
+# lambda build output
+deploy/lambda/dist/
+.wrangler/
