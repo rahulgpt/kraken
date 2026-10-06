@@ -1,20 +1,229 @@
 ---
-slug: mdx-blog-post
-title: MDX Blog Post
-authors: [slorber]
-tags: [docusaurus]
+slug: understanding-routing
+title: Understanding Routing in Kraken
+authors: [rahul]
+tags: [kraken, routing, tutorial, advanced]
 ---
 
-Blog posts support [Docusaurus Markdown features](https://docusaurus.io/docs/markdown-features), such as [MDX](https://mdxjs.com/).
+Routing is at the heart of any web framework. In this post, we'll explore how Kraken handles routing and how you can leverage it to build structured web applications.
 
-:::tip
+<!--truncate-->
 
-Use the power of React to create interactive blog posts.
+## What is Routing?
 
-```js
-<button onClick={() => alert('button clicked!')}>Click me!</button>
+Routing is the mechanism that maps incoming HTTP requests to specific handler functions based on the requested URI (Uniform Resource Identifier). When a client requests `/about`, the server needs to know which function should handle that request.
+
+## How Kraken Handles Routes
+
+Kraken uses a hashmap-based routing system for efficient route lookups. When you register a route, Kraken stores the URI as a key and the handler function as the value.
+
+```c
+register_route(server, "/users", users_handler);
 ```
 
-<button onClick={() => alert('button clicked!')}>Click me!</button>
+When a request comes in for `/users`, Kraken performs a quick hashmap lookup to find the corresponding handler.
 
+## Route Registration
+
+The `register_route` function has a simple signature:
+
+```c
+int register_route(
+    http_server_t *server,  // Your server instance
+    char *uri,              // The route path
+    char *(*handler)(http_req_t *req, http_res_t *res)  // Handler function
+);
+```
+
+### Return Value
+
+The function returns:
+- `0` on success
+- Non-zero value on error
+
+### Example
+
+```c
+char *user_handler(http_req_t *req, http_res_t *res) {
+    return "User List";
+}
+
+int result = register_route(server, "/users", user_handler);
+if (result != 0) {
+    fprintf(stderr, "Failed to register route\n");
+}
+```
+
+## Handler Functions
+
+Handler functions follow this signature:
+
+```c
+char *handler_name(http_req_t *req, http_res_t *res)
+```
+
+### Parameters
+
+1. **`http_req_t *req`**: The request object containing:
+   - HTTP method (GET, POST, etc.)
+   - URI
+   - Headers
+   - Body (for POST requests)
+
+2. **`http_res_t *res`**: The response object for:
+   - Setting status codes
+   - Adding headers
+   - Customizing the response
+
+### Return Value
+
+Return a string that will be sent as the response body.
+
+## Building a RESTful API Structure
+
+Here's how you might structure a simple API:
+
+```c
+char *api_home(http_req_t *req, http_res_t *res) {
+    return "API Home - Version 1.0";
+}
+
+char *get_users(http_req_t *req, http_res_t *res) {
+    return "{ \"users\": [\"Alice\", \"Bob\", \"Charlie\"] }";
+}
+
+char *get_products(http_req_t *req, http_res_t *res) {
+    return "{ \"products\": [\"Laptop\", \"Phone\", \"Tablet\"] }";
+}
+
+char *health_check(http_req_t *req, http_res_t *res) {
+    return "{ \"status\": \"healthy\" }";
+}
+
+int main() {
+    http_server_t *server = http_server_init(8000, 10);
+    
+    // API routes
+    register_route(server, "/api", api_home);
+    register_route(server, "/api/users", get_users);
+    register_route(server, "/api/products", get_products);
+    register_route(server, "/health", health_check);
+    
+    http_server_listen(server);
+    http_server_free(server);
+    
+    return 0;
+}
+```
+
+## Dynamic Responses
+
+You can generate dynamic responses based on request data:
+
+```c
+#include <time.h>
+#include <string.h>
+
+char *time_handler(http_req_t *req, http_res_t *res) {
+    static char buffer[256];
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    
+    snprintf(buffer, sizeof(buffer), 
+             "Current time: %02d:%02d:%02d",
+             t->tm_hour, t->tm_min, t->tm_sec);
+    
+    return buffer;
+}
+```
+
+:::caution Static Buffers
+When using static buffers, be aware that the data persists between calls. For thread-safe applications, consider using thread-local storage or dynamic allocation.
 :::
+
+## Route Organization Best Practices
+
+### 1. Group Related Routes
+
+```c
+// User routes
+register_route(server, "/users", list_users);
+register_route(server, "/users/create", create_user);
+register_route(server, "/users/profile", user_profile);
+
+// Admin routes
+register_route(server, "/admin", admin_dashboard);
+register_route(server, "/admin/settings", admin_settings);
+```
+
+### 2. Use Consistent Naming
+
+```c
+// Good: Descriptive and consistent
+char *user_list_handler(http_req_t *req, http_res_t *res) { ... }
+char *user_create_handler(http_req_t *req, http_res_t *res) { ... }
+
+// Avoid: Inconsistent naming
+char *users(http_req_t *req, http_res_t *res) { ... }
+char *makeNewUser(http_req_t *req, http_res_t *res) { ... }
+```
+
+### 3. Separate Route Registration
+
+For larger applications, consider separating route registration:
+
+```c
+void register_user_routes(http_server_t *server) {
+    register_route(server, "/users", user_list_handler);
+    register_route(server, "/users/create", user_create_handler);
+    register_route(server, "/users/delete", user_delete_handler);
+}
+
+void register_admin_routes(http_server_t *server) {
+    register_route(server, "/admin", admin_dashboard_handler);
+    register_route(server, "/admin/users", admin_users_handler);
+}
+
+int main() {
+    http_server_t *server = http_server_init(8000, 10);
+    
+    register_user_routes(server);
+    register_admin_routes(server);
+    
+    http_server_listen(server);
+    http_server_free(server);
+    
+    return 0;
+}
+```
+
+## Current Limitations
+
+Kraken's current routing system has some limitations:
+
+- **No URL Parameters**: Routes like `/users/:id` are not yet supported
+- **Query Strings Are Not Part of the Route**: `/search?q=hello` matches the `/search` route, and the handler reads `q` with `req_query_param(req, "q")`
+- **Exact Match Only**: Routes must match exactly (no wildcards or patterns)
+- **No HTTP Method Distinction**: All HTTP methods (GET, POST, etc.) go to the same handler
+
+These limitations are part of Kraken's simplicity, making it easier to understand and learn.
+
+## Future Enhancements
+
+Potential routing improvements could include:
+
+- URL parameter extraction (`/users/:id`)
+- Regex-based route matching
+- HTTP method-specific handlers
+- Middleware support
+
+## Conclusion
+
+Kraken's routing system provides a simple, efficient way to map URLs to handler functions. While it lacks some advanced features found in modern web frameworks, its simplicity makes it perfect for learning and experimentation.
+
+For more information, check out:
+- [HTTP Request API documentation](/api/http-req)
+- [Creating Endpoints Example](/examples/creating-a-endpoint)
+- [HTTP Server API Reference](/api/http-server)
+
+Happy routing! 🦑
